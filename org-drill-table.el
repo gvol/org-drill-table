@@ -266,12 +266,24 @@ Return a list of OrgDrillCard."
           (nreverse acc))))))
 
 (defun org-drill-table--table->cards (heading type instructions)
-  "Convert the drill-table tree at point to a list of OrgDrillCards. "
-  (--map (OrgDrillCard
-          (if (string= "" heading)
-              (cdr (car it)) heading)
-          type instructions it)
-         (org-drill-table--drill-table-rows)))
+  "Convert the drill-table tree at point to a list of OrgDrillCards.
+If the type is \"simple\", then the first column is put into the
+instructions via `format' instead of creating a new heading.
+This allows using org-drill-table for things that can only be
+studdied in one direction."
+  (if (string= type "simple")
+      (--map (OrgDrillCard
+              (if (string= "" heading)
+                  (cdr (car it)) heading)
+              type
+              (format instructions (cdar it))
+              (cdr it))
+             (org-drill-table--drill-table-rows))
+    (--map (OrgDrillCard
+            (if (string= "" heading)
+                (cdr (car it)) heading)
+            type instructions it)
+           (org-drill-table--drill-table-rows))))
 
 (defun org-drill-table--get-or-read-prop (name read-fn)
   "Get the value of property NAME for the headline at point.
